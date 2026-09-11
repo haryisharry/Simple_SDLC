@@ -1,0 +1,9 @@
+I have GPT Sol on ChatGPT DEsktop and Gemini Pro 3.1 on Opencode , both working on a same repo. to save my token fee, I want to connect them together. GPT Sol in the role of Project Manager and TEchnical Manager and Gemini in the role of DEveloper, Tester. Do you have any sugguestion ?
+
+Yes, that the basic idea, but in a serious project, we need to follow step by step as a normal software development that start from Business Analysic, User Story, etc.. Feature design, specification, UX, UI, them then architecture, back-end, frontend, test plan: unitest, function test, feature test, integration test, UAT, etc... How to make these 2 models work together properly and optimize their resource.
+
+I want to build a framework base on this idea so that I can optimize my token budget for long term, project by project in the future.
+
+don't design the system as “Sol ↔ Gemini.” Design it as ManagementModel ↔ Orchestrator ↔ WorkerModel from day one. Sol, Astra and Gemini then become replaceable provider configurations. That is what will make this framework useful to you years and many projects from now.
+
+If any point not clear or you need more information, just stop to ask me first.

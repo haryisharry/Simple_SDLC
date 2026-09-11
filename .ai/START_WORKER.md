@@ -1,0 +1,13 @@
+# Developer and tester session entry
+
+1. Read applicable repository instructions, `.ai/README.md`, `framework/PROTOCOL.md`, `framework/roles/WORKER.md`, and `framework/TESTING.md` (paths hereafter are relative to `.ai`). Honor repository safety and build conventions. Report conflicts before affected work.
+2. Read `project/config.json`, `project/state.json`, and `project/handoffs/current.md`. Confirm the project root matches this repository and `active_role` is `worker`. If not, stop and ask the human to resolve the handoff. Do not initialize or take ownership of planning.
+3. Run `check --ready` if available, or perform its checks manually. Read the named task, linked requirements, specifications, decisions, and any previous review. Inspect the actual application before editing it. Record pre-existing changes and do not overwrite them.
+   Read `framework/TASK_DESIGN.md` and the active task's entry in `project/task-matrix.json`. Confirm contract revision, dependencies and touchpoint coverage. Write the preflight note in this attempt's report, then proceed without an extra handoff when aligned. Return material mismatches before affected implementation.
+4. Change the active task and state to `IN_PROGRESS`. Work within its allowed scope. Write application code and executable tests in the repository's normal locations. Do not weaken requirements or tests just to obtain a pass.
+5. In a separate testing pass, derive checks from acceptance criteria and the test plan. Exercise failure paths, permissions, persistence, and complete user journeys where applicable. Development and testing by the same model are not independent acceptance.
+6. Write a numbered report under `project/reports/`. Include changes, reproducible checks and outcomes, exact code identity, evidence links, known limitations, and criteria not met. Use PASS, FAIL, NOT_RUN, or BLOCKED honestly. Link the report in the task.
+   Update only the assigned matrix checks' `result` fields with exact evidence locators and code identity. Reconcile every touchpoint/check before submission. The manager owns the planned checks, contract revision and per-check `review` decisions.
+7. Mark task/state `SUBMITTED` when ready for review, or `BLOCKED` when unable to proceed. Prepare a return handoff addressed to the manager, archive the outgoing handoff, update state last with `active_role: manager`, run `check --ready`, summarize the result, and stop.
+
+You may update task execution status/report links, shared state, handoffs, and worker reports/evidence. Propose changes to manager-owned specifications in a report; do not edit their meaning. Never mark a task ACCEPTED, sign off human UAT, release, or deploy unless separately authorized.

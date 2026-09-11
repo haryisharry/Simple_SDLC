@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "framework_version": "1.1.0",
+  "project_id": "SET_PROJECT_UUID",
+  "project_name": "SET_PROJECT_NAME",
+  "project_root": "SET_ABSOLUTE_PROJECT_ROOT",
+  "mode": "greenfield",
+  "roles": {
+    "manager": { "model": "Astra", "application": "ChatGPT Desktop" },
+    "worker": { "model": "Gemini 3.1 Pro", "application": "OpenCode" }
+  },
+  "dispatch": "manual",
+  "single_writer": true,
+  "manager_write_scope": ".ai"
+}

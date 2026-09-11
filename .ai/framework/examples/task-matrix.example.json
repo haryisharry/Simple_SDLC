@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "feature": "FEATURE-JOB-ARTIFACT-LINK",
+      "revision": 1,
+      "depends_on": [],
+      "scope_review": "DRAFT",
+      "inventory_note": "ILLUSTRATIVE ONLY. Before dispatch, inspect canonical schema, migration runner, supported historical schemas and queue consumers in the target checkout.",
+      "reviewed_code_identity": "",
+      "touchpoints": [
+        {"id": "TP-FRESH", "path": "app/persistence/schema.py", "surface": "Fresh database schema", "action": "CHANGE", "reason": "Persist the exact job-to-artifact relationship."},
+        {"id": "TP-UPGRADE", "path": "app/persistence/migrations.py", "surface": "Existing database upgrade", "action": "CHANGE", "reason": "Existing installations need the same relation without losing history."}
+      ],
+      "checks": [
+        {
+          "id": "CHK-SCHEMA-PARITY", "criterion": "AC-JOB-LINK-001",
+          "scenario": "Fresh latest schema and every supported historical upgrade produce the same relationship and constraints while preserving fixture identities.",
+          "touchpoints": ["TP-FRESH", "TP-UPGRADE"],
+          "mode": "AUTOMATED",
+          "method": "Run the real migration runner against isolated copies of authentic historical fixtures; compare normalized schema manifests and preserved identity/hash/reference assertions.",
+          "expected": "All supported paths reach the canonical manifest; protected IDs, hashes and relationships are preserved; failure leaves the schema version unadvanced.",
+          "result": {"status": "NOT_RUN", "contract_revision": 1, "code_identity": "", "reason": "Example only; no project execution.", "evidence": []},
+          "review": "PENDING"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "stage": "discovery",
+  "active_role": "manager",
+  "active_task": null,
+  "task_status": "NONE",
+  "current_handoff": "handoffs/current.md",
+  "summary": "Initialized. Manager discovery and business clarification are pending.",
+  "updated_at": "SET_UTC_TIMESTAMP"
+}
