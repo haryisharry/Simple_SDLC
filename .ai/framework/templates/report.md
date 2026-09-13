@@ -24,6 +24,14 @@ Update each assigned check's result in project/task-matrix.json. Do not change p
 ## Execution details
 TODO — exact commands, working directory, environment, exit status and actual results.
 
+## Per-plan execution reports
+
+| Plan ID / revision | Assigned scenarios | Report path | Execution status / gaps |
+| --- | --- | --- | --- |
+| TODO | TODO | TODO | NOT_RUN |
+
+Use templates/test-report.md, or an equally complete identified section here for a small plan. Include failed/blocked attempts and disclose partial execution. Human UAT remains separate.
+
 ## Failures, skipped checks, limitations and blockers
 TODO — distinguish baseline failures, regressions, stubs and real environment results.
 

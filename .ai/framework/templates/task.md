@@ -14,7 +14,7 @@ TODO — matching project/task-matrix.json entry, parent feature/journey, impact
 TODO — ordered, detailed substeps; identify actual entry points, all producers/consumers and upgrade paths where relevant. These are executed within one worker turn.
 
 ## Inputs
-TODO — exact paths to requirements/design/decisions and previous review.
+TODO — exact paths to requirements/design/decisions and previous review; master implementation-plan revision and module/phase; assigned test-plan IDs, paths, revisions and scenario IDs.
 
 ## Allowed implementation scope and behavior to preserve
 TODO
@@ -32,7 +32,7 @@ Worker records understanding, intended changes/checks and any mismatch in its at
 TODO — which matrix checks close this task and which separate integration/feature/UAT gates remain.
 
 ## Deliverables and report destination
-TODO — application/test changes and project/reports/TASK-001-attempt-01.md.
+TODO — application/test changes, project/reports/TASK-001-attempt-01.md and assigned per-plan execution reports. For delivery tasks, include the final artifact identity/hash and exclusion/runtime verification evidence under DELIVERY.md.
 
 ## Execution and review links
 No submission yet.

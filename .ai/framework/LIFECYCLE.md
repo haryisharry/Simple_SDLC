@@ -4,15 +4,15 @@ Use these stages iteratively for features. Work can return to earlier stages whe
 
 | Stage | Manager output / gate before progressing |
 | --- | --- |
-| Discovery | Brief and repository assessment; business problem, users, scope, constraints, unknowns, brownfield baseline |
+| Discovery | Brief and repository assessment; product owner, smallest useful release, baseline/target outcome measures, users, scope, constraints, unknowns, brownfield baseline |
 | Requirements | Stories, business rules, observable acceptance criteria, role matrix, nonfunctional needs, exclusions |
-| Design | Feature behavior, UX journeys, UI states, architecture, contracts, persistence, access rules, migration and rollback where relevant |
-| Planning | Test plan, detailed task contracts/matrix, inspected touchpoint inventory, dependencies, measurable checks and bounded first task |
+| Design | Material feasibility assumptions investigated where needed; feature behavior, UX journeys, UI states, architecture, contracts, persistence, access rules, migration and rollback where relevant |
+| Planning | Master implementation plan by module/phase, test index and detailed procedures, task contracts/matrix, inspected touchpoint inventory, dependencies, measurable checks and bounded first task |
 | Implementation | Worker code, tests, execution report; task submitted for review |
-| Verification | Manager review of exact code state and relevant test evidence; corrections or task acceptance |
+| Verification | Manager review of exact code state, evidence and the plan's fitness for the original business outcome; corrections or task acceptance |
 | UAT | Human exercises agreed role-based journeys; feedback and explicit signoff recorded |
-| Release | Readiness assessment, known issues, deployment/rollback/runbook, human release decision |
-| Maintenance | Bug intake, operational feedback, regressions, dependency/schema changes, renewed tasks |
+| Release | Readiness assessment, final delivery artifact inspection excluding `.ai`, known issues, deployment/rollback/runbook, human release decision |
+| Maintenance | Named operational owners, monitoring/incident response, measured business outcomes and user feedback, regressions, dependency/schema changes, renewed tasks |
 
 Requirement/design checklist, where applicable:
 
@@ -28,3 +28,5 @@ Require an explicit human answer for unclear business decisions that materially 
 Project completion is broader than task acceptance. Use `templates/release.md` for a readiness record. Keep technical completion, environment qualification, human UAT, and release authorization separately stated. A project can be technically complete while UAT remains pending; do not call that released or fully accepted.
 
 Use `TASK_DESIGN.md` at the planning/implementation/review boundaries. Require a final assembled journey/integration task in addition to component tasks. After two rejected submissions for a task, diagnose the recurring cause and revise the task or verification approach before another patch cycle.
+
+WORKFLOW.md maps these lifecycle gates to the human's process. INVESTIGATIONS.md uses ordinary bounded tasks within existing stages, with investigation acceptance separate from design feasibility. GIT_WORKFLOW.md separates framework versions, plan/contract revisions, attempts and product releases. DELIVERY.md defines application packaging verification; OPERATIONS.md covers readiness, actual deployment results and the feedback loop.

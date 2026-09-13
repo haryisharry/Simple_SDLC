@@ -22,3 +22,11 @@ TODO — mark not applicable with reasons when appropriate.
 
 ## Risks and unresolved decisions
 TODO
+
+## Assumptions requiring evidence
+
+| Question / hypothesis | Known facts and sources | Decision affected | Evidence needed / threshold | Investigation task or reason none needed | Finding / decision link |
+| --- | --- | --- | --- | --- | --- |
+| TODO | TODO | TODO | TODO | TODO | Pending |
+
+Use INVESTIGATIONS.md for material unknowns requiring an experiment. Keep observed facts separate from assumptions. A complete investigation can disprove feasibility; missing environment access remains a blocker.

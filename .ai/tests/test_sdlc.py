@@ -1,12 +1,17 @@
 """Regression tests use disposable projects and never initialize the distribution."""
 
 import importlib.util
+import io
 import json
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
+import tarfile
 import unittest
+from unittest import mock
+import zipfile
 
 
 SOURCE = Path(__file__).resolve().parents[1]
@@ -85,6 +90,8 @@ class FrameworkTests(unittest.TestCase):
         self.assertEqual([], sdlc.check(self.ai, ready=True))
         self.assertIn("DRAFT", (project / "brief.md").read_text())
         self.assertEqual("NOT_RUN", (project / "testing" / "uat.md").read_text().split("Overall status: ")[1].splitlines()[0])
+        self.assertIn("Status: DRAFT", (project / "implementation-plan.md").read_text())
+        self.assertEqual("1.3.0", sdlc.read_json(project / "config.json")["framework_version"])
 
     def test_brownfield_preserves_application(self):
         existing = self.ai.parent / "application.txt"
@@ -335,6 +342,180 @@ class FrameworkTests(unittest.TestCase):
         matrix["tasks"][0]["checks"].append(matrix["tasks"][0]["checks"][0].copy())
         self.save_matrix(matrix)
         self.assertTrue(any("duplicate check ID" in error for error in sdlc.check(self.ai)))
+
+    def test_additive_upgrade_preserves_active_records(self):
+        self.ready_worker()
+        project = self.ai / "project"
+        plan = project / "implementation-plan.md"
+        plan.unlink()  # Simulate 1.1 records before the new master plan existed.
+        config_path = project / "config.json"
+        config = sdlc.read_json(config_path)
+        config["framework_version"] = "1.1.0"
+        sdlc.write_json(config_path, config)
+        protected = ["state.json", "task-matrix.json", "tasks/TASK-001.md", "handoffs/current.md", "testing/plan.md"]
+        before = {name: (project / name).read_bytes() for name in protected}
+        errors = sdlc.check(self.ai, ready=True)
+        self.assertTrue(any("implementation-plan.md" in error for error in errors))
+        self.assertTrue(any("version mismatch" in error for error in errors))
+        shutil.copyfile(self.ai / "framework" / "templates" / "implementation-plan.md", plan)
+        config["framework_version"] = "1.3.0"
+        sdlc.write_json(config_path, config)
+        self.assertEqual([], sdlc.check(self.ai, ready=True))
+        self.assertEqual(before, {name: (project / name).read_bytes() for name in protected})
+        self.assertEqual(1, config["schema_version"])
+
+    def test_1_2_upgrade_preserves_acceptance_without_optional_records(self):
+        self.ready_worker()
+        project = self.ai / "project"
+        self.task("ACCEPTED")
+        self.state(active_role="manager", task_status="ACCEPTED")
+        self.handoff("manager")
+        self.pass_check()
+        (project / "reports" / "TASK-001-attempt-01.md").write_text("Existing worker evidence links.", encoding="utf-8")
+        (project / "reviews" / "TASK-001-attempt-01.md").write_text("Existing accepted review.", encoding="utf-8")
+        config_path = project / "config.json"
+        config = sdlc.read_json(config_path)
+        config["framework_version"] = "1.2.0"
+        sdlc.write_json(config_path, config)
+        before = {path.relative_to(project): path.read_bytes() for path in project.rglob("*") if path.is_file()}
+        errors = sdlc.check(self.ai, ready=True)
+        self.assertEqual(1, len(errors))
+        self.assertIn("version mismatch", errors[0])
+        config["framework_version"] = "1.3.0"
+        sdlc.write_json(config_path, config)
+        self.assertEqual([], sdlc.check(self.ai, ready=True))
+        after = {path.relative_to(project): path.read_bytes() for path in project.rglob("*") if path.is_file()}
+        self.assertEqual(set(before), set(after))
+        for name in before:
+            if name != Path("config.json"):
+                self.assertEqual(before[name], after[name], str(name))
+        previous_config = json.loads(before[Path("config.json")])
+        previous_config["framework_version"] = "1.3.0"
+        self.assertEqual(previous_config, sdlc.read_json(config_path))
+        self.assertFalse((project / "operations.md").exists())
+        self.assertFalse((project / "investigation.md").exists())
+
+    def test_staging_retries_transient_windows_rename_failure(self):
+        source = self.root / "staged"
+        source.mkdir()
+        (source / "record.md").write_text("preserve", encoding="utf-8")
+        target = self.root / "published"
+        error = PermissionError("simulated Windows access denied")
+        error.winerror = 5
+        original_rename = Path.rename
+        calls = []
+
+        def rename(path, destination):
+            calls.append(path)
+            if len(calls) == 1:
+                raise error
+            return original_rename(path, destination)
+
+        with mock.patch.object(Path, "rename", rename), mock.patch.object(sdlc.time, "sleep") as delay:
+            sdlc.publish_staged(source, target)
+        self.assertEqual(2, len(calls))
+        delay.assert_called_once_with(0.1)
+        self.assertEqual("preserve", (target / "record.md").read_text())
+
+    def test_staging_retry_is_bounded_and_preserves_competing_destination(self):
+        source = self.root / "staged"
+        source.mkdir()
+        target = self.root / "published"
+        error = PermissionError("simulated Windows access denied")
+        error.winerror = 5
+        with mock.patch.object(Path, "rename", side_effect=error) as rename, mock.patch.object(sdlc.time, "sleep"):
+            with self.assertRaises(PermissionError):
+                sdlc.publish_staged(source, target)
+            self.assertEqual(4, rename.call_count)
+        self.assertTrue(source.is_dir())
+
+        def competing_writer(_):
+            target.mkdir()
+            (target / "existing.md").write_text("other writer", encoding="utf-8")
+
+        with mock.patch.object(Path, "rename", side_effect=error) as rename, mock.patch.object(sdlc.time, "sleep", side_effect=competing_writer):
+            with self.assertRaises(ValueError):
+                sdlc.publish_staged(source, target)
+            self.assertEqual(1, rename.call_count)
+        self.assertEqual("other writer", (target / "existing.md").read_text())
+
+    def test_delivery_directory_detects_hidden_records_without_changing_them(self):
+        product = self.root / "product"
+        product.mkdir()
+        (product / "app.txt").write_text("runtime", encoding="utf-8")
+        self.assertEqual([], sdlc.check_delivery(product))
+        private = product / "nested" / ".AI" / "report.md"
+        private.parent.mkdir(parents=True)
+        private.write_text("coordination evidence", encoding="utf-8")
+        self.assertTrue(any("contains .ai" in error for error in sdlc.check_delivery(product)))
+        self.assertEqual("coordination evidence", private.read_text())
+
+    def test_delivery_zip_member_paths(self):
+        for member, rejected in [("app/main.py", False), ("app/.ai/state.json", True), ("app\\.AI\\state.json", True), ("../outside.py", True)]:
+            with self.subTest(member=member):
+                artifact = self.root / "product.zip"
+                with zipfile.ZipFile(artifact, "w") as archive:
+                    archive.writestr(member, "fixture")
+                original = artifact.read_bytes()
+                self.assertEqual(rejected, bool(sdlc.check_delivery(artifact)))
+                self.assertEqual(original, artifact.read_bytes())
+
+    def test_delivery_tar_member_paths(self):
+        for member, rejected in [("app/main.py", False), ("app/.ai/state.json", True), ("app/.AI/", True)]:
+            with self.subTest(member=member):
+                artifact = self.root / "product.tar.gz"
+                with tarfile.open(artifact, "w:gz") as archive:
+                    data = b"fixture"
+                    info = tarfile.TarInfo(member)
+                    info.size = len(data)
+                    archive.addfile(info, io.BytesIO(data))
+                self.assertEqual(rejected, bool(sdlc.check_delivery(artifact)))
+
+    def test_delivery_archive_links_are_rejected_without_extraction(self):
+        artifact = self.root / "linked.zip"
+        with zipfile.ZipFile(artifact, "w") as archive:
+            info = zipfile.ZipInfo("linked")
+            info.create_system = 3
+            info.external_attr = (stat.S_IFLNK | 0o777) << 16
+            archive.writestr(info, "../outside")
+        self.assertTrue(any("entry/link" in error for error in sdlc.check_delivery(artifact)))
+        for kind in (tarfile.SYMTYPE, tarfile.LNKTYPE):
+            with self.subTest(kind=kind):
+                artifact = self.root / "linked.tar"
+                with tarfile.open(artifact, "w") as archive:
+                    info = tarfile.TarInfo("linked")
+                    info.type = kind
+                    info.linkname = "../outside"
+                    archive.addfile(info)
+                self.assertTrue(any("entry/link" in error for error in sdlc.check_delivery(artifact)))
+        self.assertFalse((self.root / "linked").exists())
+
+    def test_delivery_missing_empty_and_unsupported_inputs_fail(self):
+        directory = self.root / "empty"
+        directory.mkdir()
+        empty_zip = self.root / "empty.zip"
+        with zipfile.ZipFile(empty_zip, "w"):
+            pass
+        unsupported = self.root / "corrupt.zip"
+        unsupported.write_bytes(b"not an archive")
+        for artifact in (self.root / "missing", directory, empty_zip, unsupported):
+            with self.subTest(artifact=artifact.name):
+                self.assertTrue(sdlc.check_delivery(artifact))
+
+    def test_delivery_cli_passes_and_fails_without_project_initialization(self):
+        artifact = self.root / "product.zip"
+        command = [sys.executable, str(self.ai / "tools" / "sdlc.py"), "check-delivery", str(artifact)]
+        with zipfile.ZipFile(artifact, "w") as archive:
+            archive.writestr("main.py", "fixture")
+        passed = subprocess.run(command, cwd=self.root, capture_output=True, text=True)
+        self.assertEqual(0, passed.returncode, passed.stderr)
+        self.assertIn("Nested archives", passed.stdout)
+        with zipfile.ZipFile(artifact, "a") as archive:
+            archive.writestr(".ai/secret-plan.md", "fixture")
+        failed = subprocess.run(command, cwd=self.root, capture_output=True, text=True)
+        self.assertEqual(1, failed.returncode)
+        self.assertIn("contains .ai", failed.stderr)
+        self.assertFalse((self.ai / "project").exists())
 
 
 if __name__ == "__main__":

@@ -6,16 +6,23 @@ Human instructions and applicable repository rules constrain this workflow. The 
 
 | Records | Owner |
 | --- | --- |
-| Brief, requirements, design, decisions, traceability, test plan, acceptance/review | Manager |
-| Application implementation, executable tests, reports, execution evidence | Worker |
+| Brief, requirements, design, decisions, traceability, master implementation plan, test index/procedures, acceptance/review | Manager |
+| Application implementation, executable tests, implementation/per-plan execution reports, execution evidence | Worker |
 | Task execution status and report links | Worker during its turn; manager during review |
 | State and current handoff | Outgoing actor, updated together before stopping |
 | Human decisions and UAT signoff | Human; manager may transcribe with explicit attribution |
+| Business priorities, outcome targets, release/operational authority assignments | Human product owner; manager records attributed decisions |
+| Investigation contracts and decisions; operations plans and feedback triage | Manager |
+| Experiment evidence and deployment/operational execution reports | Worker or authorized human operator; manager may transcribe with attribution |
 | Framework instructions/templates | Maintainer; only change as an explicit framework task |
 | Task matrix: scope, dependencies, checks, revision, per-check review | Manager |
 | Task matrix: assigned checks' result records | Worker during execution; manager may invalidate stale results with a recorded reason |
 
 Manager writes are limited to `.ai`. Read access includes the entire project. Manager verification must not intentionally modify application source, snapshots, dependencies, or generated application artifacts. Redirect test reports to `.ai/project/evidence/` where supported; delegate checks with intentional writes or external effects. Ordinary ignored runtime caches can occur during read-oriented checks. These rules require agent cooperation; they are not an OS sandbox.
+
+Follow GIT_WORKFLOW.md for optional review branches and application checkpoints. The human/assigned worker performs Git mutations involving application files; the Manager inspects the submitted code and writes its planning/review records inside `.ai`.
+
+The product owner uses the existing `human` actor; no third model is required. Investigations and operations changes use the same task/handoff ownership and acceptance rules. Experimental findings may disprove a design even when the investigation task is accepted. Feedback becomes work through Manager triage and ordinary task preparation, not a second independent queue. See INVESTIGATIONS.md, OPERATIONS.md and roles/PRODUCT_OWNER.md.
 
 ## Shared state
 

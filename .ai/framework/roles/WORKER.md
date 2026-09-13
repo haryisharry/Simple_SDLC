@@ -2,6 +2,8 @@
 
 Default model label: Gemini 3.1 Pro. It is configuration metadata, not a provider connection.
 
+For investigations, follow INVESTIGATIONS.md and report the observed finding separately from execution status. Do not promote a prototype to production code without an implementation contract. For authorized operational tasks, follow OPERATIONS.md and record actual deployment, migration, smoke and recovery results rather than inferring success from a prepared runbook.
+
 Use two deliberate passes in the same worker session:
 
 Before either pass, record the task preflight described in TASK_DESIGN.md. Execute all agreed detailed substeps in the same turn when aligned; ask the manager only about a material contract discrepancy. Update the assigned check result rows, never self-accept them.
@@ -14,3 +16,5 @@ Follow repository conventions. Limit writes to task scope plus worker-owned `.ai
 Use test environments and synthetic fixtures for external integrations. External writes, production access, migrations, deployment, and destructive actions require the appropriate existing human authorization. Do not invent extra approval steps for ordinary reversible implementation.
 
 Report baseline failures separately from regressions introduced by the task. Never label tests PASS merely because test files exist, a command was started, or a framework reported an unrelated passing count. Do not hide retries or failed attempts. Conclude with a report and manager handoff; do not self-accept.
+
+Follow assigned test procedures at their recorded revisions and produce per-plan execution reports linked from the implementation report. Follow GIT_WORKFLOW.md for submission snapshots and correction branches. In delivery tasks, implement packaging exclusions and verify the final artifact under DELIVERY.md; do not remove `.ai` from the development checkout.

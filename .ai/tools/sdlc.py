@@ -7,11 +7,16 @@ import argparse
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path, PureWindowsPath
 import re
 import shutil
+import stat
 import sys
+import tarfile
+import time
 import uuid
+import zipfile
 
 
 TASK_ID = re.compile(r"TASK-\d{3,}\Z")
@@ -34,6 +39,7 @@ DOCUMENTS = {
     "discovery.md": "discovery.md",
     "decisions.md": "decisions.md",
     "traceability.md": "traceability.md",
+    "implementation-plan.md": "implementation-plan.md",
     "test-plan.md": "testing/plan.md",
     "uat.md": "testing/uat.md",
     "task-matrix.json": "task-matrix.json",
@@ -54,6 +60,20 @@ def staging_directory(parent: Path, prefix: str):
             raise ValueError("Staging directory identity changed; refusing cleanup.")
         if directory.exists():
             shutil.rmtree(directory)
+
+
+def publish_staged(source: Path, destination: Path) -> None:
+    """Retry transient Windows rename failures without replacing existing records."""
+    for attempt in range(4):
+        if destination.exists() or destination.is_symlink():
+            raise ValueError("Destination appeared during staging; nothing will be overwritten.")
+        try:
+            source.rename(destination)
+            return
+        except PermissionError as exc:
+            if getattr(exc, "winerror", None) not in (5, 32, 33) or attempt == 3:
+                raise
+            time.sleep(0.1 * (2 ** attempt))
 
 
 def read_json(path: Path) -> dict:
@@ -118,7 +138,7 @@ def initialize(ai_root: Path, name: str, mode: str) -> Path:
             "Initial documents are drafts; no implementation or acceptance has occurred.\n",
             encoding="utf-8",
         )
-        staged.rename(project)
+        publish_staged(staged, project)
     return project
 
 
@@ -434,8 +454,75 @@ def export_clean(ai_root: Path, destination: Path) -> Path:
     with staging_directory(destination.parent, ".export-") as temporary:
         staged = Path(temporary) / ".ai"
         shutil.copytree(ai_root, staged, ignore=ignored)
-        staged.rename(destination)
+        publish_staged(staged, destination)
     return destination
+
+
+def check_delivery(artifact: Path) -> list[str]:
+    """Inspect names/types only; do not extract, follow links or inspect nested archives."""
+    errors: list[str] = []
+    files = 0
+
+    def inspect_name(name: str) -> None:
+        parts = name.replace("\\", "/").split("/")
+        if any(part.casefold() == ".ai" for part in parts):
+            errors.append(f"Delivery contains .ai: {name}")
+        if ".." in parts or name.startswith(("/", "\\")) or PureWindowsPath(name).drive:
+            errors.append(f"Unsafe artifact member path: {name}")
+
+    def linked(path: Path) -> bool:
+        info = path.lstat()
+        return stat.S_ISLNK(info.st_mode) or (stat.S_ISREG(info.st_mode) and info.st_nlink > 1) or bool(
+            getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+        )
+
+    def walk_error(error: OSError) -> None:
+        raise error
+
+    try:
+        if linked(artifact):
+            return ["Delivery artifact must not be a link or reparse point."]
+        inspect_name(artifact.name)
+        if artifact.is_dir():
+            for directory, dirs, names in os.walk(artifact, followlinks=False, onerror=walk_error):
+                for name in dirs[:] + names:
+                    path = Path(directory) / name
+                    relative = path.relative_to(artifact).as_posix()
+                    inspect_name(relative)
+                    if linked(path):
+                        errors.append(f"Delivery contains a link/reparse point: {relative}")
+                        if name in dirs:
+                            dirs.remove(name)
+                    elif path.is_file():
+                        files += 1
+                    elif not path.is_dir():
+                        errors.append(f"Unsupported delivery entry: {relative}")
+        elif not artifact.is_file():
+            return ["Delivery artifact must be a directory, ZIP or TAR file."]
+        elif zipfile.is_zipfile(artifact):
+            with zipfile.ZipFile(artifact) as archive:
+                for member in archive.infolist():
+                    inspect_name(member.filename)
+                    kind = stat.S_IFMT(member.external_attr >> 16)
+                    if kind not in (0, stat.S_IFREG, stat.S_IFDIR):
+                        errors.append(f"Unsupported delivery entry/link: {member.filename}")
+                    elif not member.is_dir():
+                        files += 1
+        elif tarfile.is_tarfile(artifact):
+            with tarfile.open(artifact, "r:*") as archive:
+                for member in archive:
+                    inspect_name(member.name)
+                    if member.isfile():
+                        files += 1
+                    elif not member.isdir():
+                        errors.append(f"Unsupported delivery entry/link: {member.name}")
+        else:
+            return ["Unsupported delivery artifact; provide a directory, ZIP or TAR file."]
+    except (OSError, ValueError, EOFError, tarfile.TarError, zipfile.BadZipFile) as exc:
+        errors.append(f"Could not inspect delivery artifact: {exc}")
+    if not files:
+        errors.append("Delivery artifact contains no regular files.")
+    return errors
 
 
 def main() -> int:
@@ -448,6 +535,8 @@ def main() -> int:
     check_parser.add_argument("--ready", action="store_true", help="Also flag unfinished task/handoff placeholders.")
     export_parser = commands.add_parser("export", help="Copy the framework without project records.")
     export_parser.add_argument("destination", type=Path)
+    delivery_parser = commands.add_parser("check-delivery", help="Inspect a delivery directory or ZIP/TAR for .ai content.")
+    delivery_parser.add_argument("artifact", type=Path)
     args = parser.parse_args()
     ai_root = Path(__file__).resolve().parents[1]
     try:
@@ -457,12 +546,15 @@ def main() -> int:
         elif args.command == "export":
             print(f"Clean framework exported: {export_clean(ai_root, args.destination)}")
         else:
-            errors = check(ai_root, args.ready)
+            errors = check_delivery(args.artifact) if args.command == "check-delivery" else check(ai_root, args.ready)
             if errors:
                 for error in errors:
                     print(f"ERROR: {error}", file=sys.stderr)
                 return 1
-            print("Structural checks passed. Content, code correctness, and acceptance are not validated.")
+            if args.command == "check-delivery":
+                print("Delivery name/type checks passed: no .ai entries. Nested archives, content and application completeness are not validated.")
+            else:
+                print("Structural checks passed. Content, code correctness, and acceptance are not validated.")
     except (OSError, ValueError, TypeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

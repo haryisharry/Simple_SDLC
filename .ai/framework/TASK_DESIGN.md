@@ -12,6 +12,8 @@ Sequence foundational contract/migration tasks before their consumers. Reserve a
 
 ## 2. Manager inventory before READY
 
+Prefer a complete user outcome across relevant UI, backend and persistence boundaries when it fits a bounded review. Keep future tasks DRAFT until material decisions are settled; do not over-specify an entire roadmap before learning from the first increment. Use INVESTIGATIONS.md for risky assumptions: the experiment must be specified even when its answer is unknown. Downstream tasks require both accepted investigation evidence and the resulting recorded decision.
+
 Inspect the real repository and record the search/read basis in `inventory_note`. For each changed rule or contract identify:
 
 - All writers/producers: UI, API, import, retry, scheduler, CLI, background worker as applicable.
@@ -28,6 +30,8 @@ In brownfield work, a passing fresh-database test cannot cover an upgrade, and a
 ## 3. Prepare the contract and matrix
 
 Create `tasks/TASK-NNN.md` from the task template and a matching task object in `task-matrix.json`. The task document contains the detailed procedure/substeps. The matrix contains stable IDs and compact, checkable links between scope, criteria, tests and review. Do not duplicate narrative specifications in the matrix.
+
+Link the task from its module/phase in `project/implementation-plan.md`. Name assigned test-plan IDs, paths and revisions in the task and handoff; matrix checks reference the concrete procedure/scenario in `method` without adding schema fields. Follow TESTING.md for per-plan reports and test revision handling.
 
 Each task object contains:
 
@@ -59,6 +63,8 @@ Only the manager changes criteria, touchpoints, exclusions or dependencies. Pres
 
 A new business requirement is a scope change, not automatically a worker defect. A previously required but omitted boundary is a planning/implementation gap. Record which occurred rather than changing the target silently.
 
+When a finding changes module/phase scope or sequence, archive and revise the master implementation plan as well. Keep task/test-plan revisions aligned in dispatch inputs; do not renumber past attempts or overwrite earlier evidence. GIT_WORKFLOW.md describes branch continuity and product versioning.
+
 ## 6. Review once across the agreed task scope
 
 The manager reviews every planned check and relevant cross-boundary effects, gathering findings into one actionable review where practical. Distinguish requirement gap, missed touchpoint, implementation defect, inadequate test, invalid evidence, environment block and new scope. Preserve accepted behavior and name affected checks for each correction. Stop early only when an invalid baseline makes remaining review unreliable; state what was not reviewed.
@@ -68,6 +74,8 @@ The worker reports exact per-check outcomes; the manager owns per-check acceptan
 After **two rejected submissions for the same task**, or sooner for a repeated symptom, stop the patch-only loop. The manager records a root-cause review and changes the method: reproduce first, rediscover producers/consumers, repair the contract, split the task, add a missing integration check, or resolve a specific environment issue. Do not send the same broad repair prompt again. This threshold triggers diagnosis, not abandonment or forced human approval.
 
 ## 7. Feature closure and efficient continuation
+
+Challenge the contract against the original business outcome and actual user journey: identify assumptions shared by the design and tests, missing behavior and contradicting user/operational evidence. Use the review template's business-outcome assessment even when every planned check passes. A material flaw in the agreed outcome prevents full acceptance until resolved through the appropriate contract/decision path. Separate newly requested scope from previously required behavior that was overlooked; do not silently expand the task or weaken expectations. A new conversation alone is not independent verification.
 
 List every required task and the final integration/journey task in traceability. A feature remains incomplete while any required task, integration check, environment qualification or human acceptance gate is pending/blocked. An accepted safe interim behavior does not mean its decision-blocked production variant is complete.
 

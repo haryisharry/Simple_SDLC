@@ -1,10 +1,12 @@
 # SimpleSDLC
 
-A portable, file-based development workflow for a human coordinating a manager model and a worker model. Version 1.1.0.
+A portable, file-based development workflow for a human coordinating a manager model and a worker model. Version 1.3.0.
 
 Copy this entire pristine `.ai` folder into the root of any new or existing project. Open that project in both agent applications. Start the manager, then manually alternate agents using the handoff prompts below. Only one agent writes at a time.
 
 ## Start here
+
+Read [the operating workflow](framework/WORKFLOW.md) for discovery through release and operation. The Developer role is called `worker` in the protocol and project records. The [human product owner](framework/roles/PRODUCT_OWNER.md) sets business priorities and acceptance authority.
 
 Paste this into your manager session:
 
@@ -30,6 +32,10 @@ These prompts work in fresh conversations. Neither application is assumed to aut
 | `tests/` | Regression tests for the helper |
 | `project/` | Project-specific records, created during initialization |
 
+`project/implementation-plan.md` maps modules/phases to detailed tasks, dependencies, test plans and completion gates. `project/testing/plan.md` indexes verification; substantial plans use individual procedures and execution reports. See [Git review workflow](framework/GIT_WORKFLOW.md) for submission snapshots and optional review branches, and [delivery rules](framework/DELIVERY.md) for excluding `.ai` from shipped applications.
+
+Use [investigations](framework/INVESTIGATIONS.md) when an uncertain design needs experimental evidence. Plan a complete next increment, then implement, verify and review both the implementation and the plan against the business goal. Prepare [operations and feedback](framework/OPERATIONS.md) before release at the depth the product needs. Investigation task sections and operations records are created on demand; the existing task states, schemas and single-writer handoffs remain unchanged.
+
 The manager owns planning and acceptance. The worker owns implementation and execution reports. Both can read the whole repository. The manager may run approved, non-destructive checks, but changes to application code, tests, dependencies, or generated project artifacts belong to the worker. Business acceptance and release authorization belong to the human.
 
 The manager plans down to detailed tasks using `project/task-matrix.json`: affected touchpoints, dependencies, contract revision, expected checks, worker evidence and manager review. Each touchpoint needs a check. Read `framework/TASK_DESIGN.md` for this central handoff contract and the rule for diagnosing repeated correction loops. A real brownfield example is in `framework/examples/WORKDAY_LESSONS.md`.
@@ -44,6 +50,7 @@ python .ai/tools/sdlc.py init --name "Existing Product" --mode brownfield
 python .ai/tools/sdlc.py check
 python .ai/tools/sdlc.py check --ready
 python .ai/tools/sdlc.py export ../next-project/.ai
+python .ai/tools/sdlc.py check-delivery path/to/product.zip
 python -m unittest discover -s .ai/tests -v
 ```
 
@@ -53,6 +60,6 @@ The export destination must be a new folder named `.ai`. Export copies the reusa
 
 Python is optional for the document workflow: the manager can follow `framework/BOOTSTRAP.md` to create records from templates manually. No API keys are needed. Keep `.ai` in version control with the project when appropriate; never put credentials, private production payloads, or access tokens in it.
 
-Read `framework/PROTOCOL.md` for ownership and handoff rules, `framework/LIFECYCLE.md` for the development stages, and `framework/MAINTENANCE.md` for model changes and framework upgrades.
+Read `framework/PROTOCOL.md` for ownership and handoff rules, `framework/LIFECYCLE.md` for the development stages, and `framework/MAINTENANCE.md` for model changes and framework upgrades. Version changes are listed in `framework/CHANGELOG.md`. The delivery command checks directory or ZIP/TAR entry names/types; it does not validate nested archives, container images or application completeness.
 
 `framework/VALIDATION.md` records the helper's test coverage and the remaining real-agent pilot qualification.

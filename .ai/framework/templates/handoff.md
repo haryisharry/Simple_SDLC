@@ -9,10 +9,10 @@ Contract: 1
 TODO — one unambiguous instruction and stop condition.
 
 ## Read these inputs
-TODO — task, relevant design/requirements, latest report/review.
+TODO — task and contract revision, master plan module/phase and revision, assigned test plans/procedures and revisions, relevant design/requirements, latest implementation and per-plan reports/review.
 
 ## Current code and verification state
-TODO — identify working tree state and gaps without copying large logs.
+TODO — submitted/tested commit, current branch/HEAD, dirty-tree identity and gaps without copying large logs. If switching branches, identify the verified starting commit and how the next actor receives the current planning records (GIT_WORKFLOW.md).
 
 ## Expected outputs and constraints
 TODO

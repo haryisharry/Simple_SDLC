@@ -1,9 +1,104 @@
-I have GPT Sol on ChatGPT DEsktop and Gemini Pro 3.1 on Opencode , both working on a same repo. to save my token fee, I want to connect them together. GPT Sol in the role of Project Manager and TEchnical Manager and Gemini in the role of DEveloper, Tester. Do you have any sugguestion ?
+How I work with AI agents to build projects and ship products
 
-Yes, that the basic idea, but in a serious project, we need to follow step by step as a normal software development that start from Business Analysic, User Story, etc.. Feature design, specification, UX, UI, them then architecture, back-end, frontend, test plan: unitest, function test, feature test, integration test, UAT, etc... How to make these 2 models work together properly and optimize their resource.
+Purpose and setup
 
-I want to build a framework base on this idea so that I can optimize my token budget for long term, project by project in the future.
+I want a reusable, file-based framework for delivering software with two AI agents across many projects. My priority is technical quality and reliable collaboration. I have limited tokens for my Manager model and a larger allowance for my Developer model, but the framework does not need API billing, subscription management, cost tracking, or automatic dispatch.
 
-don't design the system as “Sol ↔ Gemini.” Design it as ManagementModel ↔ Orchestrator ↔ WorkerModel from day one. Sol, Astra and Gemini then become replaceable provider configurations. That is what will make this framework useful to you years and many projects from now.
+- Manager: Astra in ChatGPT Desktop / Codex. This role handles business analysis, planning, architecture, test planning, technical review, and coordination.
+- Developer: Gemini 3.1 Pro in OpenCode within Visual Studio Code. This role implements application code, writes executable tests, runs verification, and reports results. Implementation requires technical judgment; the Developer should challenge a plan when evidence reveals a problem.
+- Human product owner: me. I decide priorities, business rules, scope tradeoffs, acceptance authority, and release authorization. Actual users participate in feedback and UAT where appropriate.
 
-If any point not clear or you need more information, just stop to ask me first.
+Model and application names must be configurable so I can replace either model later without redesigning the workflow. Both applications open the same local project folder on my Windows laptop. I manually transfer work and results between them. Only one agent may write at a time; I stop the previous session before starting the next writer or switching branches.
+
+1. Set up the repository and establish the baseline
+
+For a new project, I normally create a GitHub repository in the browser and clone it to my laptop. I copy a clean framework distribution into .ai at the project root, then ask the Manager to inspect the project and scaffold its project-specific records.
+
+For a brownfield project, I reuse its repository where practical or import the existing source while preserving history where available. Before planning changes, we establish current behavior, existing test results and failures, compatibility requirements, deployment assumptions, and data migration needs. We distinguish pre-existing issues and user changes from new work. A working fresh installation does not prove that an existing installation can upgrade successfully.
+
+2. Discover the problem and agree on requirements
+
+I work with the Manager to clarify the business goal, stakeholders, user roles, scope, constraints, risks, rough estimates, and assumptions. We define the smallest useful release and measurable success criteria.
+
+We document functional and nonfunctional requirements, user stories, business rules, acceptance criteria, API and integration requirements, and explicit exclusions. I resolve material business decisions; the agents handle routine technical choices within the agreed scope. We record unresolved questions instead of allowing hidden assumptions to become requirements.
+
+Where useful, actual users review proposed workflows or prototypes early. We save agreed planning checkpoints to Git and push through the authorized project workflow.
+
+3. Validate risky assumptions and design the solution
+
+Before committing to a detailed design, we identify uncertainties that need evidence: integration capabilities, deployment access, data constraints, technology compatibility, or performance feasibility. The Manager can assign a small investigation or prototype to the Developer, with a clear question, scope, and expected evidence. Its findings inform the design; a successful prototype does not automatically qualify as production code.
+
+The Manager and I then define the system architecture, data model, API contracts, UI/UX journeys and states, security, technology choices, persistence, migration, and operational requirements.
+
+We maintain a master implementation plan covering modules or phases, dependencies, risks, verification, and release gates. We plan the overall direction first, then write detailed implementation instructions for the next manageable increment. Future work can remain less detailed until its assumptions are settled.
+
+Each increment should deliver an independently reviewable outcome, preferably a complete user journey across the relevant UI, backend, and persistence boundaries. Foundational tasks are allowed where needed. We reserve explicit work to verify the assembled application across modules.
+
+4. Plan verification before implementation
+
+The Manager defines each increment's observable acceptance criteria and test procedures before dispatch. Plans include prerequisites, environments, roles, fixtures, ordered steps or commands, expected observations, pass/fail rules, evidence locations, and cleanup.
+
+Coverage includes applicable build/static checks, unit tests, functional and feature tests, integration tests, complete user journeys, regression tests, security, performance, accessibility, recovery, and concurrency. We cover relevant failure paths and role boundaries, and distinguish local stubs from real target-environment qualification. Exclusions require a reason.
+
+We prepare human UAT scripts and identify who can accept the business outcomes. Automated checks and model reviews cannot substitute for actual human UAT statements.
+
+A task is ready for implementation when its scope, dependencies, inputs, acceptance criteria, required checks, and expected deliverables are actionable, with no unresolved decision that materially affects that task. Documentation depth should match risk and complexity.
+
+5. Implement and test one agreed increment
+
+I switch to the Developer with the current handoff. Before editing, the Developer reads the task and relevant source, confirms the intended outcome, identifies affected boundaries, and checks for contradictions or missing prerequisites.
+
+If the plan is aligned with the actual project, the Developer proceeds without another approval round. If a material discrepancy appears, it returns the evidence and a proposed resolution to the Manager. It must not silently broaden scope, weaken acceptance criteria, or change expected test outcomes merely to obtain a pass.
+
+The Developer implements the assigned increment and tests it during development. It then performs a deliberate verification pass against the agreed requirements, including negative cases and existing behavior that must remain intact.
+
+It returns an implementation report and results for each assigned test plan. Reports identify the exact tested code snapshot, relevant uncommitted changes, commands or manual steps, environment, actual outcomes, and evidence. Failed attempts, skipped checks, and blockers remain visible. Missing execution is NOT_RUN or BLOCKED, never PASS. A small task may combine reports while retaining this information.
+
+The Developer stops at the agreed review boundary. It does not implement the entire roadmap before the Manager receives feedback.
+
+6. Review, diagnose, and improve
+
+I stop the Developer and return to the Manager, using the same conversation or a fresh one. A review branch is optional; if used, it must contain the submitted implementation and current planning records. Both agents must know which branch and code snapshot are authoritative.
+
+The Manager inspects the actual code and evidence against both the task contract and the original business goal. It checks whether the design and tests themselves missed an important requirement or user journey. A fresh conversation can challenge assumptions, but does not by itself establish independent verification. Reports distinguish checks the Manager reran from artifacts it inspected and results reported only by the Developer.
+
+The Manager accepts the increment or issues concrete corrections with the failure, root cause where established, affected scope, expected behavior, and required verification. Repeated failures trigger a change in the plan or verification approach rather than another broad repair request.
+
+When findings change scope, sequencing, contracts, or test procedures, we preserve the prior versions, update affected plans, and invalidate evidence that no longer applies. We keep previous reports and reviews. The Developer receives the updated records before continuing.
+
+Plan revisions, task contract revisions, execution attempts, framework versions, and product release versions are separate. A correction cycle does not automatically create a new product release or framework version.
+
+Our central loop is:
+
+Plan the next complete increment -> implement -> verify -> review against the business goal -> adjust -> continue.
+
+7. Qualify and release the product
+
+We define production readiness through explicit gates rather than saying that quality is "good enough":
+
+- Agreed requirements and complete user journeys are satisfied.
+- Required technical checks pass with evidence for the release candidate.
+- The application is qualified in its intended deployment environment.
+- Required human UAT is completed and its actual acceptance recorded.
+- Remaining defects and limitations have explicit dispositions and acceptance owners.
+- Configuration, secrets provisioning, migrations, backup/restore, deployment, rollback, and operational instructions are ready as applicable.
+- The final delivery artifact is inspected, includes required runtime files, excludes .ai, and works without .ai.
+- I explicitly authorize release.
+
+The Developer prepares and verifies deployment and packaging changes within the assigned scope and authorization. We identify the exact release artifact and run deployment smoke checks. Passing technical tests alone does not authorize deployment or establish human acceptance.
+
+8. Operate and learn after release
+
+We identify who owns monitoring, incidents, troubleshooting, maintenance, and rollback decisions. We gather user feedback, operational failures, and outcome measures, then feed them into the next planning cycle. Operational detail should match the product's risk and scale.
+
+Shared records and ownership
+
+The .ai folder is the agents' shared project memory. It contains project context, decisions, requirements, designs, the master implementation plan, detailed tasks, test plans, reports, evidence references, reviews, current state, and handoff history.
+
+The Manager may read the entire repository and inspect implementation evidence, but writes only inside .ai. Application source, executable tests, dependencies, build configuration, and deployment changes belong to the Developer. Each role updates its owned records; the outgoing actor updates the current handoff and state before stopping. Human acceptance is recorded with attribution, never invented by an agent.
+
+New conversations resume from the current records and verify project identity, ownership, branch, and code state. Summaries help navigation but do not replace approved requirements or evidence. Interrupted sessions are reconciled before continuing.
+
+We keep .ai in development version history where appropriate and preserve its records. We exclude it through the actual application packaging and deployment process, then inspect the final artifact. We do not delete the shared memory to create a release. When starting another project, we copy only the reusable framework and initialize fresh project records.
+
+The framework should remain practical: manual coordination, configurable roles, clear file ownership, actionable plans, trustworthy evidence, and explicit acceptance. It should support the agents' technical judgment and expose uncertainty early without adding unnecessary approval rounds or economic controls.
