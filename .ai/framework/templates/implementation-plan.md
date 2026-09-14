@@ -18,7 +18,7 @@ TODO — smallest useful release and brief outcome targets; unresolved feasibili
 | --- | --- | --- | --- | --- | --- | --- |
 | TODO | TODO | TODO | TODO | TODO | TODO | TODO |
 
-Link to detailed task documents and task-matrix.json rather than copying their contracts. Future tasks may remain DRAFT; all material behavior of a dispatched task must be settled. Mark deferred scope with the decision and its effect on release eligibility.
+Link to detailed task documents and task-matrices/TASK-NNN.json rather than copying their contracts. Keep this root plan <= 8,192 bytes and 120 lines; put release/phase detail in plans/ pages under MEMORY.md. Maintain current gates and routes rather than a list of all historical tasks. Future tasks may remain DRAFT; all material behavior of a dispatched task must be settled. Mark deferred scope with the decision and its effect on release eligibility.
 
 ## Integrated verification and release work
 TODO — explicit assembled-feature/journey tasks, cross-module regression, environment qualification, human UAT, delivery packaging checks, migration/rollback and release decision.

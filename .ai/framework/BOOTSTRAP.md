@@ -9,7 +9,7 @@
 6. Update `brief.md` and `discovery.md`. For brownfield, capture current behavior, ownership boundaries, baseline test results or NOT_RUN, existing failing checks, compatibility constraints, data migration and rollback needs, and user changes already present. Delegate baseline execution if manager checks would modify the app or require additional authorization. For greenfield, establish constraints before selecting a stack.
 7. Tailor lifecycle depth to scope. Complete required specifications and a test plan before issuing the first implementation task. Unknown material behavior remains an explicit decision, not a hidden assumption.
    If an unknown needs experimental evidence, prepare an ordinary bounded task using INVESTIGATIONS.md. Settle its method/scope before dispatch; the unknown answer is its purpose. Record the decision before preparing dependent implementation.
-8. Follow `TASK_DESIGN.md` to decompose the work into task-level contracts. Populate task-matrix.json from an inspected impact inventory before marking a task READY; include a final integration/journey task for each assembled feature.
+8. Follow `TASK_DESIGN.md` to decompose the work into task-level contracts. Create task-matrices/TASK-NNN.json from the entry template and an inspected impact inventory before marking a task READY; include a final integration/journey task for each assembled feature. task-matrix.json remains a fixed v2 descriptor.
 9. Maintain `implementation-plan.md` as the module/phase/task index. Fill `testing/plan.md` and create detailed procedures from `test-procedure.md` when needed; create `testing/plans`, `testing/reports` and `contracts` on demand. Include release packaging verification under DELIVERY.md and applicable operations under OPERATIONS.md. WORKFLOW.md explains the sequence from discovery through operation.
 
 Initial template mappings:
@@ -21,7 +21,9 @@ Initial template mappings:
 | `test-plan.md` | `testing/plan.md` |
 | `uat.md` | `testing/uat.md` |
 | `config.json`, `state.json` | Same filename in project root |
-| `task-matrix.json` | `task-matrix.json` (initially empty) |
+| `task-matrix.json` | `task-matrix.json` (v2 storage descriptor); also create empty `task-matrices/` |
+
+Apply MEMORY.md from the first session: keep root records/current handoff <= 8,192 bytes and 120 lines; partition all other working records before 49,152 bytes or 600 lines. The entry template is copied once per actual task, not during initialization. Legacy projects use migrate-matrix; never overwrite their matrix with the new empty descriptor.
 
 On-demand templates (not required by initialization/check): append `investigation.md` sections to an ordinary task when needed; create `project/operations.md` from `operations.md` before release, or link an adequate existing runbook. Record justified operational exclusions for small projects. Do not initialize pretend experiment, feedback or deployment results.
 

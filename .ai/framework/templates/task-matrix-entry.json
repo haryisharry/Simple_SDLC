@@ -1,0 +1,11 @@
+{
+  "id": "TASK-001",
+  "feature": "TODO",
+  "revision": 1,
+  "depends_on": [],
+  "scope_review": "DRAFT",
+  "inventory_note": "TODO",
+  "reviewed_code_identity": "",
+  "touchpoints": [],
+  "checks": []
+}

@@ -1,6 +1,32 @@
 # Version 1 validation record
 
-## Current release: 1.3.0
+## Current release: 1.4.0
+
+Date: 2026-09-14. Environment: Windows, Python 3.14.0. Command from the distribution root: `python -B -m unittest discover -s .ai/tests -v`. Result: **50 tests passed**, exit code 0, unittest duration 15.384 seconds. The 39 existing scenarios were adapted to per-task storage; 11 additional memory tests exercised:
+
+- Lossless migration of 1,500 tasks from a matrix exceeding 10,000 lines, including unknown nested task fields, exact-byte original backup, unchanged task documents, a descriptor under 100 bytes, full structural validation and repeat-migration no-op.
+- Recovery after a simulated failure at descriptor replacement, plus refusal of conflicting directories and unknown top-level fields.
+- Legacy structural validation and per-task filename/ID and missing-shard errors.
+- A 1,200-task dependency chain and a subsequently introduced cycle without recursive traversal.
+- Active-context routes that never load unrelated shards; nonoverlapping paged task discovery.
+- Byte/line limits across root decisions, a custom binary-format working file, reports and matrix shards; paged access to large cold evidence.
+- Read bounds/path traversal refusal and CLI diagnostic/payload caps.
+
+The first added-test run had 49 passes and one fixture-size assertion failure: the generated legacy matrix had 9,611 lines rather than the required >10,000. The fixture was increased from 1,200 to 1,500 tasks; the final 50-test run above passed. No framework failure was hidden by that correction.
+
+Document review covered startup paths, descriptor/shard examples, ownership, root/detail limits, partitioning of all accumulating records and the migration procedure. Whitespace checks passed. The distribution remains uninitialized; no actual customer project was migrated and no model-session performance improvement was measured. Tests use disposable synthetic projects, not a real multi-day two-agent workload. Windows filesystem link/junction scenarios and every possible interruption point were not exercised. Full machine audits still scan history; agent reading discipline and semantic completeness after document partitioning cannot be guaranteed by structural checks.
+
+The working-record limits are enforced by check/check --ready; the aggregate startup reading budget is a protocol rule. Cold evidence/history is intentionally exempt from file-size limits and must be retrieved selectively. See MEMORY.md for the precise limits and known boundaries.
+
+Captured final output: [v1.4.0-unittest.txt](evidence/v1.4.0-unittest.txt). Tested working-tree SHA-256 identities:
+
+| File | SHA-256 |
+| --- | --- |
+| tools/sdlc.py | CB87AE569063981A2C0CA21CA24F4C66F191B846EA5886677680441F0D245421 |
+| tests/test_memory.py | C5417443B2A062A61C8841001C830187171E51503FF0F5429F24D99BD2CDDF95 |
+| tests/test_sdlc.py | E31C943F49332EFEB4310C50EF01D6D8068E4AD7C91555CB24DC370744BD16C1 |
+
+## Release: 1.3.0
 
 Date: 2026-09-13. Environment: Windows, Python 3.14.0. Command: `python -B -m unittest discover -s .ai/tests -v` from the distribution root. Result: **39 tests passed**, exit code 0, unittest duration 3.902 seconds. Captured output: [v1.3.0-unittest.txt](evidence/v1.3.0-unittest.txt).
 

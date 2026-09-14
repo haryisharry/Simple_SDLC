@@ -45,7 +45,7 @@ Keep the task's metadata status equal to `task_status`. One active task at a tim
 
 Use `templates/task.md`. Every task has a unique `TASK-NNN` ID, an objective, allowed scope, relevant inputs, observable acceptance criteria, required checks, and expected deliverables. Manager tasks can cover requirements/design without application coding. Worker execution tasks need an actionable contract, not “build the entire app” with unspecified behavior.
 
-Follow `TASK_DESIGN.md` to prepare the task-level coordination matrix. Every task document has a matching `project/task-matrix.json` entry. The manager inventories integration boundaries before dispatch and owns check-by-check acceptance. Matrix check IDs are unique within each task; cite them as TASK-NNN/CHK-ID.
+Follow `TASK_DESIGN.md` to prepare the task-level coordination matrix. Every task document has a matching `project/task-matrices/TASK-NNN.json` shard. The root task-matrix.json is a storage descriptor only. The manager inventories integration boundaries before dispatch and owns check-by-check acceptance. Matrix check IDs are unique within each task; cite them as TASK-NNN/CHK-ID.
 
 The first lines of each task are plain metadata used by the helper:
 
@@ -74,5 +74,7 @@ When blocked, always return to manager first. If the manager needs a human decis
 If a session ends mid-update, do not trust state alone. Compare task metadata, current handoff, latest report/review, and actual working tree. Record the interruption and reconcile the records using evidence. Ask the human if writer ownership is uncertain. Resume an IN_PROGRESS worker task only after confirming the prior worker stopped. Never rerun migrations, deployment, or external writes merely because a report is missing.
 
 ## Context and evidence hygiene
+
+MEMORY.md defines mandatory working-record byte/line limits for all project file types, partitioning/rotation rules and bounded retrieval. `check --ready` rejects oversized working records. Only load current routes and task-specific pages; neither a full matrix nor cumulative decision/traceability/plan history belongs in startup context. Preserve cold evidence and original records, with exact locators and links, rather than dropping coverage or accepted results to fit a budget.
 
 Read entry points and current records first, then follow task-specific links. Link large logs rather than pasting them into every handoff. Store raw test artifacts in normal ignored locations or `.ai/project/evidence/`; record stable paths, commands, timestamps, and code identity. Do not store secrets or sensitive real customer data. Summaries do not supersede approved requirements or raw results.

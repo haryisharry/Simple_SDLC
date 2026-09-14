@@ -51,7 +51,7 @@ class FrameworkTests(unittest.TestCase):
             encoding="utf-8",
         )
         path = self.ai / "project" / "task-matrix.json"
-        matrix = sdlc.read_json(path)
+        matrix = self.matrix()
         if not matrix["tasks"]:
             matrix["tasks"].append({
                 "id": "TASK-001", "feature": "FEATURE-001", "revision": 1,
@@ -61,13 +61,17 @@ class FrameworkTests(unittest.TestCase):
                 "touchpoints": [{"id": "TP-001", "path": "calculator.py", "surface": "Public calculation entry point", "action": "CHANGE", "reason": "Implement required calculation behavior."}],
                 "checks": [{"id": "CHK-001", "criterion": "AC-001", "scenario": "Calculate the boundary input through the public entry point.", "touchpoints": ["TP-001"], "mode": "AUTOMATED", "method": "Run the specified boundary-case test.", "expected": "Returns exactly the specified boundary value.", "result": {"status": "NOT_RUN", "contract_revision": 1, "code_identity": "", "reason": "Not executed yet.", "evidence": []}, "review": "PENDING"}],
             })
-            sdlc.write_json(path, matrix)
+            self.save_matrix(matrix)
 
     def matrix(self):
-        return sdlc.read_json(self.ai / "project" / "task-matrix.json")
+        return sdlc.load_task_matrix(self.ai / "project")
 
     def save_matrix(self, matrix):
-        sdlc.write_json(self.ai / "project" / "task-matrix.json", matrix)
+        directory = self.ai / "project" / "task-matrices"
+        for path in directory.glob("TASK-*.json"):
+            path.unlink()
+        for task in matrix["tasks"]:
+            sdlc.write_json(directory / f"{task['id']}.json", task)
 
     def ready_worker(self):
         self.init()
@@ -91,7 +95,7 @@ class FrameworkTests(unittest.TestCase):
         self.assertIn("DRAFT", (project / "brief.md").read_text())
         self.assertEqual("NOT_RUN", (project / "testing" / "uat.md").read_text().split("Overall status: ")[1].splitlines()[0])
         self.assertIn("Status: DRAFT", (project / "implementation-plan.md").read_text())
-        self.assertEqual("1.3.0", sdlc.read_json(project / "config.json")["framework_version"])
+        self.assertEqual("1.4.0", sdlc.read_json(project / "config.json")["framework_version"])
 
     def test_brownfield_preserves_application(self):
         existing = self.ai.parent / "application.txt"
@@ -358,7 +362,7 @@ class FrameworkTests(unittest.TestCase):
         self.assertTrue(any("implementation-plan.md" in error for error in errors))
         self.assertTrue(any("version mismatch" in error for error in errors))
         shutil.copyfile(self.ai / "framework" / "templates" / "implementation-plan.md", plan)
-        config["framework_version"] = "1.3.0"
+        config["framework_version"] = "1.4.0"
         sdlc.write_json(config_path, config)
         self.assertEqual([], sdlc.check(self.ai, ready=True))
         self.assertEqual(before, {name: (project / name).read_bytes() for name in protected})
@@ -381,7 +385,7 @@ class FrameworkTests(unittest.TestCase):
         errors = sdlc.check(self.ai, ready=True)
         self.assertEqual(1, len(errors))
         self.assertIn("version mismatch", errors[0])
-        config["framework_version"] = "1.3.0"
+        config["framework_version"] = "1.4.0"
         sdlc.write_json(config_path, config)
         self.assertEqual([], sdlc.check(self.ai, ready=True))
         after = {path.relative_to(project): path.read_bytes() for path in project.rglob("*") if path.is_file()}
@@ -390,7 +394,7 @@ class FrameworkTests(unittest.TestCase):
             if name != Path("config.json"):
                 self.assertEqual(before[name], after[name], str(name))
         previous_config = json.loads(before[Path("config.json")])
-        previous_config["framework_version"] = "1.3.0"
+        previous_config["framework_version"] = "1.4.0"
         self.assertEqual(previous_config, sdlc.read_json(config_path))
         self.assertFalse((project / "operations.md").exists())
         self.assertFalse((project / "investigation.md").exists())

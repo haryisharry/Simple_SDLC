@@ -8,7 +8,7 @@ Contract: 1
 TODO
 
 ## Task-level scope and manager readiness
-TODO — matching project/task-matrix.json entry, parent feature/journey, impact inventory and why this is one reviewable outcome. List exclusions and their reasons.
+TODO — matching project/task-matrices/TASK-NNN.json, parent feature/journey, impact inventory and why this is one reviewable outcome. List exclusions and their reasons. Keep task/shard within MEMORY.md budgets; link detailed procedures instead of duplicating them.
 
 ## Implementation substeps
 TODO — ordered, detailed substeps; identify actual entry points, all producers/consumers and upgrade paths where relevant. These are executed within one worker turn.

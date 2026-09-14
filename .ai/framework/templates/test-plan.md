@@ -3,6 +3,8 @@
 Status: DRAFT
 Revision: 1
 
+Keep this index bounded under MEMORY.md. Put scenario detail and old execution rows in per-plan/attempt files; retain current gate coverage and direct routes, not all historical runs.
+
 ## Coverage and procedure index
 
 Link the module/phase in implementation-plan.md. Cover applicable build/unit, functional/feature, integration, end-to-end, regression, performance, security and human UAT. Justify exclusions below.

@@ -1,5 +1,7 @@
 # Manager review: TASK-NNN — attempt NN
 
+Use bounded review parts under MEMORY.md when needed. Preserve every required criterion assessment and exact evidence links; put large logs in evidence rather than copying them here.
+
 Decision: ACCEPTED / CHANGES_REQUESTED / BLOCKED
 Timestamp (UTC): TODO
 Reviewed code identity: TODO

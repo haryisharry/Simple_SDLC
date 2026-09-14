@@ -1,5 +1,15 @@
 # Framework changes
 
+## 1.4.0 — 2026-09-14
+
+- Replaced the growing default matrix with a constant-size v2 descriptor and one task object per `task-matrices/TASK-NNN.json`. Config/state and task contract fields are unchanged; small legacy matrices remain auditable during upgrade.
+- Added lossless `migrate-matrix` with an exact original backup, atomic descriptor replacement, conflict refusal and recovery after interrupted publication.
+- Added `context`, paged `tasks`, bounded `read-record` and `memory-check`. Normal checks now reject oversized working records of every file type; diagnostic output is capped.
+- Added MEMORY.md rules for current-only startup, per-feature/per-release pages, index partitioning, evidence/history retrieval and safe restructuring without dropping obligations.
+- Replaced recursive dependency traversal with an iterative audit for long dependency chains.
+
+History/evidence can remain large on disk. Full audits still scale with repository history; bounded agent context depends on following the retrieval protocol. See VALIDATION.md for executed cases and remaining limits.
+
 ## 1.3.0 — 2026-09-13
 
 - Aligned the operating guide with discovery through release and post-release operation, preferring the next complete user outcome and learning before detailing future work.

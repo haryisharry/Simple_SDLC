@@ -1,5 +1,11 @@
 # Alignment with the revised working process
 
+## 1.4.0 practical memory-growth correction
+
+The 2026-09-14 report of a 10,000-line matrix adds a cross-cutting requirement: project history must not become default session context. MEMORY.md, per-task storage, lossless migration, bounded retrieval, size checks and revised startup instructions address both the matrix and other accumulating records. Current indexes must also be partitioned; detailed traceability and historical evidence remain available and authoritative. Automated checks establish size/structure, not semantic completeness after a manual document restructure or agent compliance with reading limits.
+
+## 1.3.0 process alignment
+
 Reviewed 2026-09-13 against the SimpleSDLC source repository's `idea.txt`. This is an implementation map for framework 1.3.0, not evidence that agents have delivered a real product with it.
 
 | Process requirement | Existing foundation retained | 1.3.0 completion |

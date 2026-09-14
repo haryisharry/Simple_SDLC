@@ -22,7 +22,7 @@ Identify material assumptions needing experimental evidence before committing to
 
 With the Manager, settle architecture, data and API contracts, UX/UI states, security, technology choices, deployment and migration needs. Use `project/implementation-plan.md` to map modules/phases to requirements, detailed tasks, dependencies and completion gates.
 
-The master plan is an index and sequencing record. Detailed procedures belong in `tasks/TASK-NNN.md`; checkable coverage belongs in `task-matrix.json`. Plan the overall delivery before dispatch, and fully specify the current task before marking it READY. Future tasks may remain DRAFT with explicit open decisions. Include final assembled feature and release verification work.
+The master plan is a bounded current index and sequencing record, with detail in per-release/phase pages. Detailed procedures belong in `tasks/TASK-NNN.md`; checkable coverage belongs in `task-matrices/TASK-NNN.json`. Plan the overall delivery before dispatch, and fully specify the current task before marking it READY. Future tasks may remain DRAFT with explicit open decisions. Include final assembled feature and release verification work. Follow MEMORY.md so neither plans nor indexes grow without bounds.
 
 Prefer a complete user outcome across relevant UI, backend and persistence boundaries for each increment; sequence necessary foundational tasks explicitly. Do not require every future module to be fully specified before the first increment. The central loop is: plan the next complete increment -> implement -> verify -> review against the business goal -> adjust -> continue.
 
@@ -61,3 +61,5 @@ Assign monitoring, incidents, troubleshooting, maintenance and rollback responsi
 ## Resume in a fresh conversation
 
 Use the appropriate README startup prompt. The current state, handoff, master plan, task and linked reports are the shared memory. Verify project identity, writer ownership, branch and code snapshot first. Reconcile interrupted updates from evidence before continuing; conversation history alone is not an authoritative contract.
+
+Run `context` and retrieve only current/task-specific records through `read-record` pages. Do not read all decisions, reports or shards at startup. Use paged task listing and stable per-feature/per-release routes; `check --ready` also enforces working-record size budgets. Historical evidence remains available by locator without entering every session's context.

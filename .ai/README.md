@@ -1,6 +1,6 @@
 # SimpleSDLC
 
-A portable, file-based development workflow for a human coordinating a manager model and a worker model. Version 1.3.0.
+A portable, file-based development workflow for a human coordinating a manager model and a worker model. Version 1.4.0.
 
 Copy this entire pristine `.ai` folder into the root of any new or existing project. Open that project in both agent applications. Start the manager, then manually alternate agents using the handoff prompts below. Only one agent writes at a time.
 
@@ -38,7 +38,7 @@ Use [investigations](framework/INVESTIGATIONS.md) when an uncertain design needs
 
 The manager owns planning and acceptance. The worker owns implementation and execution reports. Both can read the whole repository. The manager may run approved, non-destructive checks, but changes to application code, tests, dependencies, or generated project artifacts belong to the worker. Business acceptance and release authorization belong to the human.
 
-The manager plans down to detailed tasks using `project/task-matrix.json`: affected touchpoints, dependencies, contract revision, expected checks, worker evidence and manager review. Each touchpoint needs a check. Read `framework/TASK_DESIGN.md` for this central handoff contract and the rule for diagnosing repeated correction loops. A real brownfield example is in `framework/examples/WORKDAY_LESSONS.md`.
+The manager plans down to detailed tasks using `project/task-matrices/TASK-NNN.json`: affected touchpoints, dependencies, contract revision, expected checks, worker evidence and manager review. `task-matrix.json` is a fixed storage descriptor, not a growing task list. Read `framework/TASK_DESIGN.md` for the contract and `framework/MEMORY.md` for bounded context, working-record size limits and legacy migration. Every touchpoint still needs a check; splitting storage does not reduce coverage.
 
 ## Local commands
 
@@ -49,12 +49,18 @@ python .ai/tools/sdlc.py init --name "My Project" --mode greenfield
 python .ai/tools/sdlc.py init --name "Existing Product" --mode brownfield
 python .ai/tools/sdlc.py check
 python .ai/tools/sdlc.py check --ready
+python .ai/tools/sdlc.py context
+python .ai/tools/sdlc.py tasks --limit 20
+python .ai/tools/sdlc.py read-record task-matrices/TASK-001.json
+python .ai/tools/sdlc.py memory-check
 python .ai/tools/sdlc.py export ../next-project/.ai
 python .ai/tools/sdlc.py check-delivery path/to/product.zip
 python -m unittest discover -s .ai/tests -v
 ```
 
 Choose only one initialization command. Initialization never overwrites existing project records. `check` validates structure, task-matrix coverage, contract revisions and selected closure rules. `--ready` additionally checks dependencies before worker dispatch and unfinished task/handoff placeholders. Evidence references must be concrete, present and nonempty; accepted rows must have manager review and consistent code identity. These checks cannot prove evidence authenticity, software correctness, exhaustive scope or document quality.
+
+Both checks now reject working records exceeding the byte/line budgets in [MEMORY.md](framework/MEMORY.md), including custom files. Use small current routes, per-task/per-feature records and paged history access. `read-record` returns at most 12,000 bytes with a continuation offset; `context` returns only active record paths. To upgrade a cumulative v1 matrix, use `python .ai/tools/sdlc.py migrate-matrix` after the backup/reconciliation steps in MAINTENANCE.md. The exact original is retained. Large history may remain on disk; full audits still scan history, while agent retrieval is bounded.
 
 The export destination must be a new folder named `.ai`. Export copies the reusable framework and excludes all project records. If copying a folder from a previously active project by hand, copy everything **except `project/`**. Do not delete records from the original project. A root binding check detects accidental reuse of another project's initialized records. For an intentional move of the same project, review its identity and update `project/config.json`'s `project_root` to the new absolute root.
 

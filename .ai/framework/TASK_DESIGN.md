@@ -1,6 +1,6 @@
 # Task-level planning and coordination
 
-The manager and worker coordinate through an explicit task contract and its coverage rows in `project/task-matrix.json`. Feature names and passing test totals are insufficient. The manager is responsible for identifying the work down to this level before dispatch.
+The manager and worker coordinate through an explicit task contract and its coverage rows in `project/task-matrices/TASK-NNN.json`, one file per task. The root `task-matrix.json` is only a constant-size storage descriptor. Feature names and passing test totals are insufficient. The manager is responsible for identifying the work down to this level before dispatch. Follow MEMORY.md to retrieve the active shard in pages and partition all growing project records.
 
 ## 1. Decompose by an independently verifiable outcome
 
@@ -29,7 +29,7 @@ In brownfield work, a passing fresh-database test cannot cover an upgrade, and a
 
 ## 3. Prepare the contract and matrix
 
-Create `tasks/TASK-NNN.md` from the task template and a matching task object in `task-matrix.json`. The task document contains the detailed procedure/substeps. The matrix contains stable IDs and compact, checkable links between scope, criteria, tests and review. Do not duplicate narrative specifications in the matrix.
+Create `tasks/TASK-NNN.md` from the task template and a matching `task-matrices/TASK-NNN.json` from `templates/task-matrix-entry.json`. The shard is one task object, not a tasks-list wrapper. The task document contains the detailed procedure/substeps. The matrix contains stable IDs and compact, checkable links between scope, criteria, tests and review. Do not duplicate narrative specifications in the matrix.
 
 Link the task from its module/phase in `project/implementation-plan.md`. Name assigned test-plan IDs, paths and revisions in the task and handoff; matrix checks reference the concrete procedure/scenario in `method` without adding schema fields. Follow TESTING.md for per-plan reports and test revision handling.
 
@@ -47,7 +47,7 @@ Each task object contains:
 
 Each check's `result` holds worker execution status, `contract_revision`, code identity, reason and evidence items (`path` relative to `.ai/project`, plus an exact test node/checkpoint/record in `locator`). Each check's `review` is manager-owned: PENDING, ACCEPTED or CHANGES_REQUESTED. Execution statuses: NOT_RUN, PASS, FAIL, BLOCKED, NOT_APPLICABLE. NOT_APPLICABLE requires a reason and manager acceptance; it must not be used to drop a required business behavior.
 
-See `examples/task-matrix.example.json`. Initialization creates an empty matrix, not pretend tasks or preaccepted results. Task status remains in task metadata; the matrix does not hold a second copy of it. `state.json` mirrors only the active task status.
+The task object inside `examples/task-matrix.example.json` illustrates row content; that example retains the legacy v1 wrapper. In current storage save just the task object in its matching shard. Initialization creates the v2 descriptor and an empty task-matrices directory, not pretend tasks or preaccepted results. Task status remains in task metadata; the matrix does not hold a second copy of it. `state.json` mirrors only the active task status.
 
 ## 4. Readiness and worker understanding
 

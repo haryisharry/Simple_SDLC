@@ -15,7 +15,7 @@ TODO — commit + dirty diff/untracked identity, or relevant file hashes without
 
 ## Acceptance evidence
 
-Update each assigned check's result in project/task-matrix.json. Do not change planned criteria, expected outcomes or manager review fields. Link exact test nodes/checkpoints inside evidence and state the code identity. File existence alone is not proof.
+Update each assigned check's result in project/task-matrices/TASK-NNN.json. Do not change planned criteria, expected outcomes or manager review fields. Link exact test nodes/checkpoints inside evidence and state the code identity. File existence alone is not proof. Keep this report bounded under MEMORY.md; split large attempts into linked parts and store raw logs in evidence/.
 
 | Criterion | Check / steps | Outcome | Evidence path | Notes |
 | --- | --- | --- | --- | --- |

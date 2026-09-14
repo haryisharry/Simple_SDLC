@@ -1,5 +1,17 @@
 # Reuse, configuration, and upgrades
 
+## Upgrade 1.3.0 project records to 1.4.0
+
+Stop the other writer, version/back up `.ai`, then compare and update reusable framework files, tools, tests and entry points. Preserve project records and customizations; do not replace an existing matrix with the new template or rerun init.
+
+1. Run `python .ai/tools/sdlc.py migrate-matrix` in the target project. It preserves task objects and an exact-byte original backup, publishes per-task files and switches the descriptor last. Read MEMORY.md for interruption recovery and conflicts. It can migrate an oversized legacy matrix even when normal checks reject its size.
+2. Inspect migrated task objects and existing evidence/acceptance. Migrate storage only: task documents, check IDs/revisions, results, reviews, state and evidence paths remain unchanged. Small legacy v1 matrices remain supported by the full checker temporarily; startup context requires per-task storage.
+3. Run `memory-check`. Partition every oversized working document, including decisions, traceability, plans, UAT, reports, operations and custom files, using MEMORY.md. Keep immutable originals and repair links. Do not discard unresolved work or invalidate valid acceptance simply to reorganize storage. Oversized individual matrix shards also need Manager review and partitioning.
+4. Keep config/state schema_version at 1. The matrix descriptor alone now uses schema_version 2; each shard is the unchanged task object. Set config framework_version to `1.4.0` after reconciling the installation. Run `check`, `check --ready`, `context` and a paged read of the active task's shard if one exists.
+5. Adopt bounded retrieval and current-only entry points in every fresh agent session. Size checks cannot stop another tool from dumping a full log; obey the reading rules as well as the storage limits. No scheduler, database, vector store or model connection is added.
+
+For earlier installations, apply the necessary earlier record reconciliations below, then this migration and final checks against the installed version. Migration failure never authorizes deleting history or fabricating missing evidence.
+
 ## Model replacement
 
 Edit `project/config.json` role labels to assign a different manager or worker. Then select that model manually in the corresponding application. No provider names occur in task contracts, and the helper never invokes a model. Model abilities still need to match the assigned role. Record a material role change in decisions and give the replacement model the same startup prompt.

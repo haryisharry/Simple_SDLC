@@ -1,0 +1,61 @@
+SimpleSDLC 1.4.0 regression run
+Date: 2026-09-14
+Command: python -B -m unittest discover -s .ai/tests -v
+Working directory: D:\PROJECTS\SimpleSDLC
+Exit code: 0
+
+test_all_working_file_types_are_bounded_and_history_is_paged (test_memory.MemoryTests.test_all_working_file_types_are_bounded_and_history_is_paged) ... ok
+test_cli_caps_diagnostics_and_read_payload (test_memory.MemoryTests.test_cli_caps_diagnostics_and_read_payload) ... ok
+test_context_never_loads_unrelated_shards (test_memory.MemoryTests.test_context_never_loads_unrelated_shards) ... ok
+test_deep_dependency_chain_and_cycle_do_not_recurse (test_memory.MemoryTests.test_deep_dependency_chain_and_cycle_do_not_recurse) ... ok
+test_large_migration_preserves_every_field_and_original_bytes (test_memory.MemoryTests.test_large_migration_preserves_every_field_and_original_bytes) ... ok
+test_legacy_matrix_still_receives_structural_validation (test_memory.MemoryTests.test_legacy_matrix_still_receives_structural_validation) ... ok
+test_migration_refuses_conflicts_and_unknown_top_level_fields (test_memory.MemoryTests.test_migration_refuses_conflicts_and_unknown_top_level_fields) ... ok
+test_migration_resumes_after_descriptor_failure (test_memory.MemoryTests.test_migration_resumes_after_descriptor_failure) ... ok
+test_read_bounds_and_path_escape_are_rejected (test_memory.MemoryTests.test_read_bounds_and_path_escape_are_rejected) ... ok
+test_shard_identity_and_missing_shard_are_detected (test_memory.MemoryTests.test_shard_identity_and_missing_shard_are_detected) ... ok
+test_task_listing_uses_nonoverlapping_bounded_pages (test_memory.MemoryTests.test_task_listing_uses_nonoverlapping_bounded_pages) ... ok
+test_1_2_upgrade_preserves_acceptance_without_optional_records (test_sdlc.FrameworkTests.test_1_2_upgrade_preserves_acceptance_without_optional_records) ... ok
+test_acceptance_rejects_wrong_code_identity (test_sdlc.FrameworkTests.test_acceptance_rejects_wrong_code_identity) ... ok
+test_acceptance_requires_every_check_to_be_reviewed (test_sdlc.FrameworkTests.test_acceptance_requires_every_check_to_be_reviewed) ... ok
+test_additive_upgrade_preserves_active_records (test_sdlc.FrameworkTests.test_additive_upgrade_preserves_active_records) ... ok
+test_brownfield_preserves_application (test_sdlc.FrameworkTests.test_brownfield_preserves_application) ... ok
+test_changed_contract_rejects_stale_passing_result (test_sdlc.FrameworkTests.test_changed_contract_rejects_stale_passing_result) ... ok
+test_clean_export_excludes_project_history (test_sdlc.FrameworkTests.test_clean_export_excludes_project_history) ... ok
+test_cli_works_from_another_directory (test_sdlc.FrameworkTests.test_cli_works_from_another_directory) ... ok
+test_contract_revision_disagreement_is_rejected (test_sdlc.FrameworkTests.test_contract_revision_disagreement_is_rejected) ... ok
+test_copying_initialized_records_detects_wrong_project (test_sdlc.FrameworkTests.test_copying_initialized_records_detects_wrong_project) ... ok
+test_delivery_archive_links_are_rejected_without_extraction (test_sdlc.FrameworkTests.test_delivery_archive_links_are_rejected_without_extraction) ... ok
+test_delivery_cli_passes_and_fails_without_project_initialization (test_sdlc.FrameworkTests.test_delivery_cli_passes_and_fails_without_project_initialization) ... ok
+test_delivery_directory_detects_hidden_records_without_changing_them (test_sdlc.FrameworkTests.test_delivery_directory_detects_hidden_records_without_changing_them) ... ok
+test_delivery_missing_empty_and_unsupported_inputs_fail (test_sdlc.FrameworkTests.test_delivery_missing_empty_and_unsupported_inputs_fail) ... ok
+test_delivery_tar_member_paths (test_sdlc.FrameworkTests.test_delivery_tar_member_paths) ... ok
+test_delivery_zip_member_paths (test_sdlc.FrameworkTests.test_delivery_zip_member_paths) ... ok
+test_dependency_cycle_and_unaccepted_dependency_are_rejected (test_sdlc.FrameworkTests.test_dependency_cycle_and_unaccepted_dependency_are_rejected) ... ok
+test_duplicate_check_id_is_rejected (test_sdlc.FrameworkTests.test_duplicate_check_id_is_rejected) ... ok
+test_empty_evidence_cannot_support_pass (test_sdlc.FrameworkTests.test_empty_evidence_cannot_support_pass) ... ok
+test_export_refuses_existing_or_nested_destination (test_sdlc.FrameworkTests.test_export_refuses_existing_or_nested_destination) ... ok
+test_failed_initialization_leaves_no_partial_project (test_sdlc.FrameworkTests.test_failed_initialization_leaves_no_partial_project) ... ok
+test_full_manual_handoff_cycle (test_sdlc.FrameworkTests.test_full_manual_handoff_cycle) ... ok
+test_greenfield_initialization_is_valid_and_draft (test_sdlc.FrameworkTests.test_greenfield_initialization_is_valid_and_draft) ... ok
+test_human_decision_before_task_is_valid (test_sdlc.FrameworkTests.test_human_decision_before_task_is_valid) ... ok
+test_inconsistent_handoff_and_task_are_detected (test_sdlc.FrameworkTests.test_inconsistent_handoff_and_task_are_detected) ... ok
+test_invalid_task_path_is_not_followed (test_sdlc.FrameworkTests.test_invalid_task_path_is_not_followed) ... ok
+test_malformed_json_is_reported (test_sdlc.FrameworkTests.test_malformed_json_is_reported) ... ok
+test_manager_readiness_required_before_worker_execution (test_sdlc.FrameworkTests.test_manager_readiness_required_before_worker_execution) ... ok
+test_missing_matrix_task_is_rejected (test_sdlc.FrameworkTests.test_missing_matrix_task_is_rejected) ... ok
+test_model_labels_are_replaceable (test_sdlc.FrameworkTests.test_model_labels_are_replaceable) ... ok
+test_outside_evidence_path_is_rejected (test_sdlc.FrameworkTests.test_outside_evidence_path_is_rejected) ... ok
+test_placeholders_block_worker_dispatch (test_sdlc.FrameworkTests.test_placeholders_block_worker_dispatch) ... ok
+test_reinitialization_refuses_to_overwrite (test_sdlc.FrameworkTests.test_reinitialization_refuses_to_overwrite) ... ok
+test_schema_and_timestamp_are_checked (test_sdlc.FrameworkTests.test_schema_and_timestamp_are_checked) ... ok
+test_staging_retries_transient_windows_rename_failure (test_sdlc.FrameworkTests.test_staging_retries_transient_windows_rename_failure) ... ok
+test_staging_retry_is_bounded_and_preserves_competing_destination (test_sdlc.FrameworkTests.test_staging_retry_is_bounded_and_preserves_competing_destination) ... ok
+test_uncovered_touchpoint_blocks_handoff (test_sdlc.FrameworkTests.test_uncovered_touchpoint_blocks_handoff) ... ok
+test_uninitialized_check_reports_missing_project (test_sdlc.FrameworkTests.test_uninitialized_check_reports_missing_project) ... ok
+test_unknown_dependency_is_rejected (test_sdlc.FrameworkTests.test_unknown_dependency_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 50 tests in 15.384s
+
+OK

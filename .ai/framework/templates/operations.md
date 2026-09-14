@@ -2,6 +2,8 @@
 
 Status: DRAFT
 
+Keep this root record within MEMORY.md limits. Link per-release/incident/outcome pages rather than accumulating all deployment and feedback history here; preserve current owners, open issues and the next review.
+
 ## Ownership and authority
 
 | Responsibility | Named owner / source of assignment | Authorized scope / escalation |

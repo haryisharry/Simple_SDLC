@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import heapq
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
@@ -44,6 +45,167 @@ DOCUMENTS = {
     "uat.md": "testing/uat.md",
     "task-matrix.json": "task-matrix.json",
 }
+
+MATRIX_STORE = {"schema_version": 2, "storage": "task-matrices"}
+ROOT_BYTES, ROOT_LINES = 8192, 120
+RECORD_BYTES, RECORD_LINES = 49152, 600
+PAGE_BYTES = 12000
+
+
+def project_path(project: Path, relative: str) -> Path:
+    """Resolve a project-relative record without links or escaping the project."""
+    info = project.lstat()
+    if project.is_symlink() or getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
+        raise ValueError("Linked project records are not supported.")
+    raw = Path(relative.replace("\\", "/"))
+    if raw.is_absolute() or PureWindowsPath(relative).drive or ".." in raw.parts:
+        raise ValueError("Record path must stay inside project records.")
+    current = project
+    for part in raw.parts:
+        current = current / part
+        info = current.lstat()
+        if current.is_symlink() or getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
+            raise ValueError("Linked project records are not supported.")
+    if project.resolve() not in current.resolve().parents:
+        raise ValueError("Record path must name a file inside project records.")
+    return current
+
+
+def load_task_matrix(project: Path) -> dict:
+    """Full machine audit only. Agents should open one shard, never this combined view."""
+    manifest = read_json(project / "task-matrix.json")
+    if manifest.get("schema_version") == 1 and isinstance(manifest.get("tasks"), list):
+        return manifest
+    if manifest != MATRIX_STORE:
+        raise ValueError("Task matrix requires schema_version 1 with tasks, or the schema_version 2 storage descriptor.")
+    directory = project_path(project, "task-matrices")
+    if not directory.is_dir():
+        raise ValueError("Missing task-matrices directory.")
+    tasks = []
+    for path in sorted(directory.iterdir()):
+        if path.name == "legacy-v1.json":
+            continue
+        if path.suffix != ".json" or not TASK_ID.fullmatch(path.stem):
+            raise ValueError(f"Unexpected matrix shard: {path.name}")
+        task = read_json(project_path(project, f"task-matrices/{path.name}"))
+        if task.get("id") != path.stem:
+            raise ValueError(f"Matrix shard filename/ID mismatch: {path.name}")
+        tasks.append(task)
+    return {"schema_version": 1, "tasks": tasks}
+
+
+def migrate_matrix(project: Path) -> str:
+    """Lossless v1 -> v2 migration; descriptor replacement is the commit point."""
+    source = project_path(project, "task-matrix.json")
+    original = source.read_bytes()
+    manifest = read_json(source)
+    if manifest == MATRIX_STORE:
+        load_task_matrix(project)
+        return "Matrix already uses per-task storage; nothing changed."
+    if set(manifest) != {"schema_version", "tasks"} or manifest.get("schema_version") != 1 or not isinstance(manifest.get("tasks"), list):
+        raise ValueError("Migration requires a v1 matrix with only schema_version and tasks; reconcile unknown fields first.")
+    ids = [task.get("id") if isinstance(task, dict) else None for task in manifest["tasks"]]
+    if any(not isinstance(item, str) or not TASK_ID.fullmatch(item) for item in ids) or len(ids) != len(set(ids)):
+        raise ValueError("Migration refuses invalid or duplicate task IDs.")
+    target = project / "task-matrices"
+    # A previous interruption may have published the store but not the descriptor.
+    if target.exists() or target.is_symlink():
+        project_path(project, "task-matrices")
+        expected = {f"{item}.json" for item in ids} | {"legacy-v1.json"}
+        if {path.name for path in target.iterdir()} != expected:
+            raise ValueError("Existing task-matrices does not match a recoverable migration; preserve and reconcile it.")
+        if project_path(project, "task-matrices/legacy-v1.json").read_bytes() != original:
+            raise ValueError("Migration backup differs from the current matrix; refusing overwrite.")
+        for task in manifest["tasks"]:
+            if read_json(project_path(project, f"task-matrices/{task['id']}.json")) != task:
+                raise ValueError("Existing migration shard differs; refusing overwrite.")
+    else:
+        with staging_directory(project.parent, ".matrix-") as temporary:
+            staged = temporary / "task-matrices"
+            staged.mkdir()
+            (staged / "legacy-v1.json").write_bytes(original)
+            for task in manifest["tasks"]:
+                write_json(staged / f"{task['id']}.json", task)
+            publish_staged(staged, target)
+    with staging_directory(project.parent, ".matrix-") as temporary:
+        descriptor = temporary / "task-matrix.json"
+        write_json(descriptor, MATRIX_STORE)
+        if source.read_bytes() != original:
+            raise ValueError("Matrix changed during migration; refusing descriptor replacement.")
+        os.replace(descriptor, source)
+    return f"Migrated {len(ids)} tasks; exact original retained in task-matrices/legacy-v1.json. Run check."
+
+
+def memory_issues(project: Path) -> list[str]:
+    """Check all working records, including unknown/custom formats; history stays cold."""
+    errors = []
+    for path in project.rglob("*"):
+        info = path.lstat()
+        if path.is_symlink() or getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
+            errors.append(f"Linked project records are not supported: {path.relative_to(project)}")
+            continue
+        if not path.is_file():
+            continue
+        relative = path.relative_to(project)
+        parts = relative.parts
+        cold = parts[0] in {"evidence", "history", "contracts"} or parts[:2] == ("handoffs", "history") or relative.as_posix() == "task-matrices/legacy-v1.json"
+        if cold:
+            continue
+        root = len(parts) == 1 or relative.as_posix() == "handoffs/current.md"
+        byte_limit, line_limit = (ROOT_BYTES, ROOT_LINES) if root else (RECORD_BYTES, RECORD_LINES)
+        size = path.stat().st_size
+        # Do not load a huge/custom/binary working record just to count its lines.
+        if size > byte_limit:
+            errors.append(f"Memory budget exceeded: {relative.as_posix()} ({size} bytes > {byte_limit}); partition before handoff.")
+        else:
+            data = path.read_bytes()
+            lines = len(data.splitlines())
+            if lines > line_limit:
+                errors.append(f"Memory budget exceeded: {relative.as_posix()} ({lines} lines > {line_limit}); partition before handoff.")
+    return errors
+
+
+def read_record(project: Path, relative: str, offset: int = 0, limit: int = PAGE_BYTES) -> dict:
+    if offset < 0 or not 1 <= limit <= PAGE_BYTES:
+        raise ValueError(f"Use offset >= 0 and limit 1..{PAGE_BYTES} bytes.")
+    path = project_path(project, relative)
+    with path.open("rb") as stream:
+        stream.seek(offset)
+        data = stream.read(limit)
+    # Byte offsets are exact; split UTF-8 characters render as replacement characters.
+    return {"path": relative, "offset": offset, "next_offset": offset + len(data),
+            "more": offset + len(data) < path.stat().st_size, "text": data.decode("utf-8", errors="replace")}
+
+
+def task_page(project: Path, after: str = "", limit: int = 20) -> dict:
+    if not 1 <= limit <= 50 or (after and not TASK_ID.fullmatch(after)):
+        raise ValueError("Use a TASK-NNN cursor and limit 1..50.")
+    paths = heapq.nsmallest(limit + 1, (p for p in (project / "tasks").glob("TASK-*.md") if TASK_ID.fullmatch(p.stem) and p.stem > after), key=lambda p: p.stem)
+    return {"tasks": [p.stem for p in paths[:limit]], "after": paths[limit - 1].stem if len(paths) > limit else None}
+
+
+def context_routes(project: Path) -> dict:
+    for relative in ("state.json", "task-matrix.json", "handoffs/current.md"):
+        path = project_path(project, relative)
+        # The v1 matrix is only checked for size here, never loaded into agent context.
+        if path.stat().st_size > ROOT_BYTES:
+            raise ValueError(f"{relative} exceeds the startup budget; use migrate-matrix or paged read-record.")
+    state = read_json(project / "state.json")
+    task = state.get("active_task")
+    if task is not None and (not isinstance(task, str) or not TASK_ID.fullmatch(task)):
+        raise ValueError("Invalid active task.")
+    manifest = read_json(project / "task-matrix.json")
+    routes = ["state.json", "handoffs/current.md"]
+    if task:
+        routes += [f"tasks/{task}.md"]
+        if manifest == MATRIX_STORE:
+            routes += [f"task-matrices/{task}.json"]
+        else:
+            raise ValueError("Migrate the legacy matrix before loading active task context.")
+    else:
+        routes += ["brief.md", "discovery.md", "implementation-plan.md"]
+    return {"active_role": state.get("active_role"), "active_task": task,
+            "read_next": routes, "instruction": "Use read-record pages and task-specific links. Do not read all history or indexes."}
 
 
 @contextmanager
@@ -128,6 +290,7 @@ def initialize(ai_root: Path, name: str, mode: str) -> Path:
             (staged / directory).mkdir(parents=True, exist_ok=True)
         for source, destination in DOCUMENTS.items():
             shutil.copyfile(templates / source, staged / destination)
+        (staged / "task-matrices").mkdir()
         write_json(staged / "config.json", config)
         write_json(staged / "state.json", state)
         (staged / "handoffs" / "current.md").write_text(
@@ -146,7 +309,7 @@ def check_task_matrix(project: Path, state: dict, ready: bool) -> list[str]:
     """Validate task contracts and evidence references, never infer a test result."""
     errors: list[str] = []
     try:
-        matrix = read_json(project / "task-matrix.json")
+        matrix = load_task_matrix(project)
     except (OSError, ValueError) as exc:
         return [str(exc)]
     if matrix.get("schema_version") != 1 or not isinstance(matrix.get("tasks"), list):
@@ -283,23 +446,21 @@ def check_task_matrix(project: Path, state: dict, ready: bool) -> list[str]:
     visiting: set[str] = set()
     visited: set[str] = set()
 
-    def visit(task_id: str):
-        if task_id in visiting:
-            errors.append(f"Dependency cycle includes {task_id}.")
-            return
-        if task_id in visited:
-            return
-        visiting.add(task_id)
-        dependencies = tasks[task_id].get("depends_on", [])
-        if isinstance(dependencies, list):
-            for dependency in dependencies:
-                if isinstance(dependency, str) and dependency in tasks:
-                    visit(dependency)
-        visiting.remove(task_id)
-        visited.add(task_id)
-
     for task_id in tasks:
-        visit(task_id)
+        stack = [(task_id, False)]
+        while stack:
+            current, leaving = stack.pop()
+            if leaving:
+                visiting.discard(current)
+                visited.add(current)
+            elif current in visiting:
+                errors.append(f"Dependency cycle includes {current}.")
+            elif current not in visited:
+                visiting.add(current)
+                stack.append((current, True))
+                dependencies = tasks[current].get("depends_on", [])
+                if isinstance(dependencies, list):
+                    stack.extend((dependency, False) for dependency in dependencies if isinstance(dependency, str) and dependency in tasks)
     active = state.get("active_task")
     if isinstance(active, str) and active not in tasks:
         errors.append("Active task has no task-matrix contract.")
@@ -321,8 +482,11 @@ def check(ai_root: Path, ready: bool = False) -> list[str]:
         return ["No ordinary project directory. Initialize this project before use."]
     # Reject linked state so validation cannot accidentally read another project.
     for entry in project.rglob("*"):
-        if entry.is_symlink():
+        if entry.is_symlink() or getattr(entry.lstat(), "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
             errors.append(f"Project records must not be symbolic links: {entry.relative_to(project)}")
+    if errors:
+        return errors
+    errors.extend(memory_issues(project))
     if errors:
         return errors
     for directory in DIRECTORIES:
@@ -537,6 +701,16 @@ def main() -> int:
     export_parser.add_argument("destination", type=Path)
     delivery_parser = commands.add_parser("check-delivery", help="Inspect a delivery directory or ZIP/TAR for .ai content.")
     delivery_parser.add_argument("artifact", type=Path)
+    commands.add_parser("migrate-matrix", help="Losslessly split a legacy matrix into per-task files.")
+    commands.add_parser("context", help="Show only active task record routes.")
+    read_parser = commands.add_parser("read-record", help="Read a bounded byte page of a project record.")
+    read_parser.add_argument("path")
+    read_parser.add_argument("--offset", type=int, default=0)
+    read_parser.add_argument("--limit", type=int, default=PAGE_BYTES)
+    tasks_parser = commands.add_parser("tasks", help="List a bounded page of task IDs in lexical order.")
+    tasks_parser.add_argument("--after", default="")
+    tasks_parser.add_argument("--limit", type=int, default=20)
+    commands.add_parser("memory-check", help="Check size limits for all working records.")
     args = parser.parse_args()
     ai_root = Path(__file__).resolve().parents[1]
     try:
@@ -545,14 +719,36 @@ def main() -> int:
             print("Draft records only. Continue with START_MANAGER.md.")
         elif args.command == "export":
             print(f"Clean framework exported: {export_clean(ai_root, args.destination)}")
+        elif args.command == "migrate-matrix":
+            print(migrate_matrix(ai_root / "project"))
+        elif args.command == "context":
+            print(json.dumps(context_routes(ai_root / "project"), indent=2))
+        elif args.command == "read-record":
+            page = read_record(ai_root / "project", args.path, args.offset, args.limit)
+            content = page.pop("text")
+            print(json.dumps(page))
+            print(content)
+        elif args.command == "tasks":
+            print(json.dumps(task_page(ai_root / "project", args.after, args.limit)))
         else:
-            errors = check_delivery(args.artifact) if args.command == "check-delivery" else check(ai_root, args.ready)
+            if args.command == "check-delivery":
+                errors = check_delivery(args.artifact)
+            elif args.command == "memory-check":
+                if not (ai_root / "project").is_dir():
+                    raise ValueError("Initialize project records first.")
+                errors = memory_issues(ai_root / "project")
+            else:
+                errors = check(ai_root, args.ready)
             if errors:
-                for error in errors:
-                    print(f"ERROR: {error}", file=sys.stderr)
+                for error in errors[:30]:
+                    print(f"ERROR: {error[:400]}", file=sys.stderr)
+                if len(errors) > 30:
+                    print(f"{len(errors) - 30} further errors omitted; fix these and rerun.", file=sys.stderr)
                 return 1
             if args.command == "check-delivery":
                 print("Delivery name/type checks passed: no .ai entries. Nested archives, content and application completeness are not validated.")
+            elif args.command == "memory-check":
+                print("Working records are within size limits. Cold history/evidence must be read in pages.")
             else:
                 print("Structural checks passed. Content, code correctness, and acceptance are not validated.")
     except (OSError, ValueError, TypeError) as exc:
